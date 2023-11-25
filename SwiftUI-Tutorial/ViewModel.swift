@@ -40,6 +40,8 @@ final class ViewModel: ObservableObject {
         requestOptions.isNetworkAccessAllowed = false
         requestOptions.resizeMode = .exact
         requestOptions.deliveryMode = .highQualityFormat
+        
+        var images = [UIImage]()
 
         fetchResults.enumerateObjects { [weak self] asset, index, pointer in
             guard let self else {
@@ -52,9 +54,11 @@ final class ViewModel: ObservableObject {
                 options: requestOptions
             ) { image, info in
                 guard let image else { return }
-                self.images.append(image)
+               images.append(image)
                 
                 if index == fetchResults.count - 1 {
+                    self.images.removeAll()
+                    self.images = images
                     DispatchQueue.main.async {
                         self.objectWillChange.send()
                     }

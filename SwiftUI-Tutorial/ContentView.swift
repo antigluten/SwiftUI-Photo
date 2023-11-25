@@ -13,23 +13,29 @@ struct ContentView: View {
     @StateObject var viewModel = ViewModel()
     
     var body: some View {
-        GeometryReader { proxy in
-            ScrollView(.vertical) {
-                let width = size(width: proxy.size.width)
-                LazyVGrid(columns: columns(width: proxy.size.width)) {
-                    ForEach(0..<viewModel.images.count, id: \.self) { index in
-                        let image = viewModel.images[index]
-                        Image(uiImage: image)
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                            .frame(width: width, height: width, alignment: .center)
-                            .border(Color.clear)
-                            .clipped()
+        NavigationView {
+            GeometryReader { proxy in
+                ScrollView(.vertical) {
+                    let width = size(width: proxy.size.width)
+                    LazyVGrid(columns: columns(width: proxy.size.width)) {
+                        ForEach(0..<viewModel.images.count, id: \.self) { index in
+                            NavigationLink {
+                                ImageView(image: viewModel.images[index])
+                            } label: {
+                                let image = viewModel.images[index]
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: width, height: width, alignment: .center)
+                                    .border(Color.clear)
+                                    .clipped()
+                            }
+                        }
+                    }.onAppear {
+                        viewModel.loadPhotos(width: proxy.size.width)
                     }
-                }.onAppear {
-                    viewModel.loadPhotos(width: proxy.size.width)
+                    .padding(.horizontal)
                 }
-                .padding(.horizontal)
             }
         }
     }
