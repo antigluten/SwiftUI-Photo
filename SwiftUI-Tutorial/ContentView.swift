@@ -11,46 +11,69 @@ import Photos
 struct ContentView: View {
     
     @StateObject var viewModel = ViewModel()
+
+    @Namespace var namespace
     
+    @EnvironmentObject var model: Model
+
     var body: some View {
-        NavigationView {
+        ZStack { 
             GeometryReader { proxy in
+                if model.openDetail {
+                    detail
+                }
+                
                 ScrollView(.vertical) {
-                    let width = size(width: proxy.size.width)
-                    LazyVGrid(columns: columns(width: proxy.size.width)) {
-                        ForEach(0..<viewModel.images.count, id: \.self) { index in
-                            NavigationLink {
-                                ImageView(image: viewModel.images[index])
-                            } label: {
-                                let image = viewModel.images[index]
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: width, height: width, alignment: .center)
-                                    .border(Color.clear)
-                                    .clipped()
-                            }
+                    Text("Photos")
+                        .font(.title.weight(.bold))
+                    
+                    LazyVGrid(columns: columns(width: proxy.size.width),
+                              spacing: 10) {
+                        ForEach(viewModel.images.indices, id: \.self) { index in
+                            let containerInfo = ContainerInfo(index: index,
+                                                              zIndex: 0)
+                            ImageItemContainerView(namespace: namespace,
+                                                   containerInfo: containerInfo,
+                                                   image: viewModel.images[index].image)
                         }
-                    }.onAppear {
-                        viewModel.loadPhotos(width: proxy.size.width)
                     }
-                    .padding(.horizontal)
+                }
+                .padding(.horizontal, 16)
+                .scrollIndicators(.never)
+                .onAppear {
+                    viewModel.loadPhotos(width: proxy.size.width)
                 }
             }
         }
     }
     
+    var detail: some View {
+        ForEach(viewModel.images.indices, id: \.self) { index in
+            if index == model.selectedIndex {
+                let containerInfo = ContainerInfo(index: index, zIndex: 0)
+                ImageDetailView(namespace: namespace,
+                                containerInfo: containerInfo,
+                                image: viewModel.images[index].image)
+            }
+        }
+    }
+        
     func columns(width: CGFloat) -> [GridItem] {
-        return (0 ..< 4).map { _ in
-            return GridItem(.fixed(size(width: width)), spacing: 0, alignment: .center)
+        let numberOfColumns: CGFloat = 3
+        let size = size(width: width, numberOfColumns: numberOfColumns)
+        return (0 ..< Int(numberOfColumns)).map { _ in
+            return GridItem(.fixed(size),
+                            spacing: 10,
+                            alignment: .center)
         }
     }
     
-    func size(width: CGFloat) -> CGFloat {
-        return (width - 32) / 4
+    func size(width: CGFloat, numberOfColumns: CGFloat = 3) -> CGFloat {
+        return (width - 32) / numberOfColumns - 10
     }
 }
 
 #Preview {
     ContentView()
+        .environmentObject(Model())
 }

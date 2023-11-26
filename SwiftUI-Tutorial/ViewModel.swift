@@ -11,7 +11,11 @@ import Photos
 
 final class ViewModel: ObservableObject {
     
-    var images = [UIImage]()
+    var images = [ImageInfoWrapper]() {
+        didSet {
+            objectWillChange.send()
+        }
+    }
     
     var isEnabled = false
     
@@ -41,7 +45,7 @@ final class ViewModel: ObservableObject {
         requestOptions.resizeMode = .exact
         requestOptions.deliveryMode = .highQualityFormat
         
-        var images = [UIImage]()
+        var images = [ImageInfoWrapper]()
 
         fetchResults.enumerateObjects { [weak self] asset, index, pointer in
             guard let self else {
@@ -54,7 +58,8 @@ final class ViewModel: ObservableObject {
                 options: requestOptions
             ) { image, info in
                 guard let image else { return }
-               images.append(image)
+                let info = ImageInfoWrapper(image: image, index: index)
+                images.append(info)
                 
                 if index == fetchResults.count - 1 {
                     self.images.removeAll()
@@ -66,4 +71,11 @@ final class ViewModel: ObservableObject {
             }
         }
     }
+}
+
+struct ImageInfoWrapper {
+    var image: UIImage
+    var index: Int
+    var show: Bool = false
+    var zIndex: Double = 0
 }
